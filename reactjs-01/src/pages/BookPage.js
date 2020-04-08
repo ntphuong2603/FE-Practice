@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Table } from 'react-bootstrap';
-import DataTable from '../components/TableDisplay';
+import TableHeader from '../components/TableDisplay';
 
 class BookPage extends Component {
     constructor(props){
@@ -9,7 +9,7 @@ class BookPage extends Component {
             bookList : [],
             isLoaded : false
         }
-        let book_url = 'http://localhost:5000/bookApi/list';
+        //let book_url = 'http://localhost:5000/bookApi/list';
     }
 
     componentDidMount(){
@@ -24,14 +24,15 @@ class BookPage extends Component {
     render(){
         return (
             <Table responsive hover>
+                <TableHeader headers={['No.','Title', 'Author', 'Action']}/>
                 <tbody>
                     {this.state.bookList.map((item, index)=>{
                         return(
                             <tr>
-                                <th id={item._id}>{index +1}</th>
-                                <th>{item.title}</th>
-                                <th id={item.author._id}>{item.author.first_name + item.author.family_name}</th>
-                                <th>{item.summary}</th>
+                                <th>{index +1}</th>
+                                <td id={item._id}>{item.title}</td>
+                                <td id={item.author._id}>{item.author.first_name + item.author.family_name}</td>
+                                <td>View, Edit, Delete</td>
                             </tr>
                         )
                     })}
