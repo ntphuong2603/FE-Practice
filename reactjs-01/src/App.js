@@ -1,6 +1,7 @@
 import React from 'react';
 import { Container, Row, Col } from "react-bootstrap";
 import 'bootstrap/dist/css/bootstrap.css';
+import BookPage from './pages/BookPage';
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
         </Col>
         <Col className="col-sm-9">
           <h2> Contain area </h2>
+          <BookPage/>
         </Col>
       </Row>
     </Container>
