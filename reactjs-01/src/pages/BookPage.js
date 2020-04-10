@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Table } from 'react-bootstrap';
-import TableHeader from '../components/TableDisplay';
+import TableHeader from '../components/TableHeader';
 
 class BookPage extends Component {
     constructor(props){
@@ -9,11 +9,10 @@ class BookPage extends Component {
             bookList : [],
             isLoaded : false
         }
-        //let book_url = 'http://localhost:5000/bookApi/list';
     }
 
     componentDidMount(){
-        fetch('http://localhost:5000/bookApi/list')
+        fetch(this.props.url)
             .then(res => res.json())
             .then(res => this.setState({
                 isLoaded: true,
@@ -31,8 +30,8 @@ class BookPage extends Component {
                             <tr>
                                 <th>{index +1}</th>
                                 <td id={item._id}>{item.title}</td>
-                                <td id={item.author._id}>{item.author.first_name + item.author.family_name}</td>
-                                <td>View, Edit, Delete</td>
+                                <td id={item.author._id}>{`${item.author.first_name} ${item.author.family_name}`}</td>
+                                <td>View</td>
                             </tr>
                         )
                     })}

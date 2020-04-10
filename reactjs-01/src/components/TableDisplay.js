@@ -1,19 +1,22 @@
 import React, { Component } from 'react';
 
-class TableHeader extends Component {
-    render(){
-        return(
-            <thead>
-                <tr>
-                    {this.props.headers.map((item)=>{
-                        return(
-                            <th>{item}</th>
-                        )
-                    })}
-                </tr>
-            </thead>
-        )
+class TableDisplay extends Component {
+    constructor(props){
+        super(props)
+        this.state = {
+            data : [],
+            isLoaded : false
+        }
     }
-}
 
-export default TableHeader;
+    componentDidMount(){
+        fetch(this.props.url)
+            .then(res => res.json())
+            .then(res => this.setState({
+                isLoaded: true,
+                data: res.data
+            }))
+    }
+
+}
+export default TableDisplay;
