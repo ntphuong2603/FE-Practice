@@ -7,11 +7,10 @@ import {CreatePage, ReadPage, UpdatePage, DeletePage} from './pages/index';
 
 function App() {
   return (
-    <Container>
+    <Container style={{paddingTop: 30}}>
       <HashRouter>
         <Row>
           <Col className="col-3">
-            <h1> Menu area </h1>
             <MenuBar/>
           </Col>
           <Col className="col-9">

@@ -1,23 +1,25 @@
 import React from 'react';
-import {Form, Button, Jumbotron} from 'react-bootstrap';
+import {Form, Button, Alert, Col} from 'react-bootstrap';
 
 class CreatePage extends React.Component{
     constructor(props){
         super(props);
         this.state = {
-            name: '',
-            rating: 0,
+            movies: [],
+            movieSelected: [],
+            movieItem: ['Code', 'Name', 'Rating', 'Time']
         }
-        this.handleName = this.handleName.bind(this);
-        this.handleRating = this.handleRating.bind(this);
+        this.handleSelect = this.handleSelect.bind(this);
     }
 
-    handleName(event){
-        this.setState({name: event.target.value});
+    handleSelect(event){
+        this.setState({movieSelected: this.state.movies[event.target.value]})
     }
 
-    handleRating(event){
-        this.setState({rating: event.target.value});
+    componentDidMount(){
+        fetch('http://localhost:5000/movie/all')
+            .then(async res => await res.json())
+            .then(res => this.setState({movies: res.data}));
     }
 
     handleSubmit(event){
@@ -27,40 +29,77 @@ class CreatePage extends React.Component{
             name: this.state.name,
             rating: this.state.rating
         }
-        //console.log(this.state);
-        console.log(data);
 
         fetch('http://localhost:5000/movie/create', {
             headers: {'Content-Type':'application/json'},
             method: 'POST',
             body: JSON.stringify(data)
-        }).then(async res => await res.json()).then(res=>console.log(res.data));
+        })
+            .then(async res => await res.json())
+            .then(res => this.setState({data: res.data, show: !this.state.show}));
 
     }
 
     render(){
         return(
             <Form onSubmit={this.handleSubmit.bind(this)}>
-                <Jumbotron>
-                    <h2 variant='danger'>Update movie</h2>
-                </Jumbotron>
-                <Form.Group>
-                    <Form.Label>Name</Form.Label>
-                    <Form.Control type='text' placeholder='Enter the movie name' onChange={this.handleName}/>
+                <Alert variant="info">
+                    <h2><Alert.Link>Update</Alert.Link> movie page</h2>
+                </Alert>
+                <Form.Group controlId='movieSelect' onChange={this.handleSelect}>
+                    <Form.Row>
+                        <Form.Label column lg={2}>Select movie</Form.Label>
+                        <Col>
+                            <Form.Control as='select'>
+                                {this.state.movies.map((item, index)=>{
+                                    return(
+                                        <option value={index}>{item.name}</option>
+                                    )
+                                })}
+                            </Form.Control>
+                        </Col>
+                    </Form.Row>
                 </Form.Group>
                 <Form.Group>
-                    <Form.Label>Rating</Form.Label>
-                    <Form.Control type='text' placeholder='Enter the movie rating' onChange={this.handleRating}/>
+                    <Form.Row>
+                        <Form.Label column lg={2}>Code</Form.Label>
+                        <Col>
+                            <Form.Control type='text' value={this.state.movieSelected._id} readOnly/>
+                        </Col>
+                    </Form.Row>
                 </Form.Group>
                 <Form.Group>
-                    <Form.Label>Time</Form.Label>
-                    <Form.Control>
-
-                    </Form.Control>
+                    <Form.Row>
+                        <Form.Label column lg={2}>Name</Form.Label>
+                        <Col>
+                            <Form.Control type='text' value={this.state.movieSelected.name}/>
+                        </Col>
+                    </Form.Row>
                 </Form.Group>
-                <Button variant='primary' type='submit' onClick={this.createMovie}>Submit</Button>{' '}
-                <Button variant='danger'>Clear form</Button>{' '}
-                <Button variant='secondary'>Cancel</Button>
+                <Form.Group>
+                    <Form.Row>
+                        <Form.Label column lg={2}>Rating</Form.Label>
+                        <Col>
+                            <Form.Control type='text' value={this.state.movieSelected.rating}/>
+                        </Col>
+                    </Form.Row>
+                </Form.Group>
+                <Form.Group>
+                    <Form.Row>
+                        <Form.Label column lg={2}>Time</Form.Label>
+                        <Col>
+                            <Form.Control type='text' value={this.state.movieSelected.time}/>
+                        </Col>
+                    </Form.Row>
+                </Form.Group>
+                <Form.Group>
+                    <Form.Row>
+                        <Form.Label column lg={2}></Form.Label>
+                        <Col>
+                            <Button block variant='primary' type='submit'>Update</Button>
+                        </Col>
+                    </Form.Row>
+                </Form.Group>
             </Form>
         )
     }

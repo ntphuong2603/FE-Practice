@@ -1,5 +1,5 @@
 import React from 'react';
-import {Form, Button, Jumbotron} from 'react-bootstrap';
+import {Form, Button, Alert} from 'react-bootstrap';
 
 class CreatePage extends React.Component{
     constructor(props){
@@ -41,9 +41,9 @@ class CreatePage extends React.Component{
     render(){
         return(
             <Form onSubmit={this.handleSubmit.bind(this)}>
-                <Jumbotron>
-                    <h2 variant='danger'>Delete movie page</h2>
-                </Jumbotron>
+                <Alert variant="danger">
+                    <h2><Alert.Link>Delete</Alert.Link> movie page</h2>
+                </Alert>
                 <Form.Group>
                     <Form.Label>Name</Form.Label>
                     <Form.Control type='text' placeholder='Enter the movie name' onChange={this.handleName}/>

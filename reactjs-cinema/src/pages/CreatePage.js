@@ -1,5 +1,5 @@
 import React from 'react';
-import {Form, Button, Jumbotron, Modal} from 'react-bootstrap';
+import {Form, Button, Alert, Modal} from 'react-bootstrap';
 
 class CreatePage extends React.Component{
     constructor(props){
@@ -7,11 +7,13 @@ class CreatePage extends React.Component{
         this.state = {
             name: '',
             rating: 0,
+            time: [],
             show: false,
             data: {}
         }
         this.handleName = this.handleName.bind(this);
         this.handleRating = this.handleRating.bind(this);
+        this.handleTime = this.handleTime.bind(this);
     }
 
     handleShow = () => this.setState({show: !this.state.show});
@@ -24,12 +26,22 @@ class CreatePage extends React.Component{
         this.setState({rating: event.target.value});
     }
 
+    handleTime(event){
+        /*
+        alert(event.target.value);
+        let timeArray = event.target.value.split(',');
+        this.setState({time: timeArray});
+        console.log(timeArray);
+        */
+    }
+
     handleSubmit(event){
         event.preventDefault();
 
         let data = {
             name: this.state.name,
-            rating: this.state.rating
+            rating: this.state.rating,
+            time: this.state.time.split
         }
         //console.log(this.state);
         console.log(data);
@@ -47,9 +59,9 @@ class CreatePage extends React.Component{
     render(){
         return(
             <Form onSubmit={this.handleSubmit.bind(this)} ref='create-movie-form'>
-                <Jumbotron>
-                    <h2 variant='danger'>Create movie page</h2>
-                </Jumbotron>
+                <Alert variant="primary">
+                    <h2><Alert.Link>Create</Alert.Link> movie page</h2>
+                </Alert>
                 <Form.Group>
                     <Form.Label>Name</Form.Label>
                     <Form.Control type='text' placeholder='Enter the movie name' onChange={this.handleName} required/>
@@ -65,7 +77,7 @@ class CreatePage extends React.Component{
                     </Form.Control>
                 </Form.Group>
                 <Button variant='primary' type='submit' onClick={this.createMovie}>Submit</Button>{' '}
-                <Button variant='danger' onClick={()=>{}}>Clear form</Button>
+                <Button variant='danger' >Clear form</Button>
                 <Modal show={this.state.show} onHide={this.handleShow}>
                     <Modal.Header closeButton>
                         <Modal.Title>Movie created successfully</Modal.Title>
@@ -82,7 +94,7 @@ class CreatePage extends React.Component{
                             </Form.Group>
                             <Form.Group>
                                 <Form.Label>Rating</Form.Label>
-                                <Form.Control type='label' value={this.state.data.rating}/>
+                                <Form.Control type='label' value={this.state.data.rating} onChange={()=>{alert()}}/>
                             </Form.Group>
                         </Form>
                     </Modal.Body>
