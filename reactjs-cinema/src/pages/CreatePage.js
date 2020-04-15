@@ -7,6 +7,16 @@ class CreatePage extends React.Component{
         this.state = {
             name: '',
             rating: 0,
+            movie: {
+                name: '',
+                rating: 0,
+                time: []
+            },
+            error : {
+                name: '',
+                rating: '',
+                time:''
+            },
             time: [],
             show: false,
             data: {}
@@ -14,6 +24,28 @@ class CreatePage extends React.Component{
         this.handleName = this.handleName.bind(this);
         this.handleRating = this.handleRating.bind(this);
         this.handleTime = this.handleTime.bind(this);
+        this.handleOnChange = this.handleOnChange.bind(this);
+    }
+
+    handleOnChange = (event) => {
+        event.preventDefault();
+        const {name, value} = event.target;
+        let error = this.state.error;
+        switch (name) {
+            case 'name':
+                error.name = value.trim().length === 0 ? 'Movie name must NOT be empty' : '';
+                break;
+            case 'rating':
+                error.rating = parseFloat(value.trim()) ? '': 'Rating must be a number';
+                break;
+            case 'time':
+                error.time = value.split(',') ? '' : 'Movie time must a time like hh:mm';
+                console.log(value.split(','));
+                break;
+            default:
+                break;
+        }
+        this.setState({error, [name]: value}, ()=>{console.log(name, value, error)});
     }
 
     handleShow = () => this.setState({show: !this.state.show});
@@ -27,12 +59,10 @@ class CreatePage extends React.Component{
     }
 
     handleTime(event){
-        /*
         alert(event.target.value);
-        let timeArray = event.target.value.split(',');
-        this.setState({time: timeArray});
+        let timeArray = event.target.value;
+        this.setState({time: timeArray.split(',')});
         console.log(timeArray);
-        */
     }
 
     handleSubmit(event){
@@ -41,7 +71,7 @@ class CreatePage extends React.Component{
         let data = {
             name: this.state.name,
             rating: this.state.rating,
-            time: this.state.time.split
+            time: this.state.time
         }
         //console.log(this.state);
         console.log(data);
@@ -64,17 +94,17 @@ class CreatePage extends React.Component{
                 </Alert>
                 <Form.Group>
                     <Form.Label>Name</Form.Label>
-                    <Form.Control type='text' placeholder='Enter the movie name' onChange={this.handleName} required/>
+                    <Form.Control type='text' placeholder='Enter the movie name' name='name' onChange={this.handleOnChange} required/>
+                    <Form.Text ><span variant='danger'>{this.state.error.name}</span></Form.Text>
                 </Form.Group>
                 <Form.Group>
                     <Form.Label>Rating</Form.Label>
-                    <Form.Control type='text' placeholder='Enter the movie rating' onChange={this.handleRating} required/>
+                    <Form.Control type='text' placeholder='Enter the movie rating' name='rating' onChange={this.handleOnChange} required/>
                 </Form.Group>
                 <Form.Group>
                     <Form.Label>Time</Form.Label>
-                    <Form.Control>
-
-                    </Form.Control>
+                    <Form.Label>Rating</Form.Label>
+                    <Form.Control type='text' placeholder='Enter the movie timing' name='time' onChange={this.handleOnChange} required/>
                 </Form.Group>
                 <Button variant='primary' type='submit' onClick={this.createMovie}>Submit</Button>{' '}
                 <Button variant='danger' >Clear form</Button>

@@ -6,10 +6,12 @@ class CreatePage extends React.Component{
         super(props);
         this.state = {
             movies: [],
-            code: '',
-            name: '',
-            rating: '',
-            time: '',
+            movie:{
+                code: '',
+                name: '',
+                rating: '',
+                time: ''
+            },
             method: '',
             urlString : ''
         }
@@ -49,6 +51,7 @@ class CreatePage extends React.Component{
             urlString : event.target.name === 'delete' ? 'delete': 'update'
         });
     }
+    
     componentDidMount(){
         fetch('http://localhost:5000/movie/all')
             .then(async res => await res.json())
@@ -75,8 +78,10 @@ class CreatePage extends React.Component{
         //console.log(submit_url, submit_opt);
         console.log('Before: ', this.state.movies)
         fetch(submit_url, submit_opt).then(res=>res.json()).then(res => {
+            console.log(res.data);
+            let movieDelete = res.data;
             if (this.state.method === 'DELETE') {
-                let id = res.data._id;
+                let id = movieDelete._id;
                 let newMovies = this.state.map((item)=>{
                     if (item._id !== id){
                         return item
