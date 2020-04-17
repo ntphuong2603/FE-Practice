@@ -1,5 +1,5 @@
 import React from 'react';
-import {Form, Button, Alert, Modal, Row, Col} from 'react-bootstrap';
+import {Form, Button, Alert, Modal, Row, Col, Badge} from 'react-bootstrap';
 
 class CreatePage extends React.Component{
     constructor(props){
@@ -16,7 +16,8 @@ class CreatePage extends React.Component{
                 time: ''
             },
             show: false,
-            created: false
+            created: false,
+            formIsValid: false
         };
         this.handleOnChange = this.handleOnChange.bind(this);
         this.handleClearForm = this.handleClearForm.bind(this);
@@ -36,8 +37,10 @@ class CreatePage extends React.Component{
     handleOnChange = (event) => {
         event.preventDefault();
         const {name, value} = event.target;
+        const timeReg = /^\d{1,2}:\d{2}[,\d{1,2}:\d{2}]*?$/;
         let errors = this.state.errors;
         let movie = this.state.movie;
+        let formIsValid = false;
         switch (name) {
             case 'name':
                 let nameStr = value.trim();
@@ -45,8 +48,8 @@ class CreatePage extends React.Component{
                     errors.name = 'Movie name must NOT be empty';
                 } else {
                     errors.name = '';
+                    movie.name = nameStr;
                 }
-                movie.name = nameStr;
                 break;
             case 'rating':
                 let ratingNo = parseFloat(value.trim());
@@ -59,19 +62,30 @@ class CreatePage extends React.Component{
                 }
                 break;
             case 'time':
-                errors.time = value.split(',') ? movie.time = value.split(',') : 'Movie time must a time like hh:mm';
+                if (timeReg.test(value)){
+                    movie.time = value.split(',');
+                    errors.time = '';
+                } else {
+                    movie.time = '';
+                    errors.time = 'Movie time must a string like hh:mm or hh:mm, hh:mm';
+                }
                 break;
             default:
                 break;
         }
-        this.setState({movie: movie, errors: errors});
+        if (!errors.name.length && !errors.rating.length && !errors.time.length){
+            formIsValid = true;
+        }
+        this.setState({movie: movie, errors: errors, formIsValid: formIsValid});
     }
 
     handleShow = () => {
         if (this.state.created){
             this.handleClearForm();
+        } 
+        if (this.state.formIsValid){
+            this.setState({show: !this.state.show, created: false})
         }
-        this.setState({show: !this.state.show, created: false})
     };
 
     handleSubmit(confirmStatus){
@@ -86,12 +100,15 @@ class CreatePage extends React.Component{
             })
                 .then(res => res.json())
                 .then(res => this.setState({movie: res.data, created: confirmStatus}))
+        } else {
+            document.getElementsByName('name').focus();
         }
     }
 
     handelConfrim = (event) => {
         event.preventDefault();
-        this.handleSubmit(true)
+        //this.handleSubmit(true)
+        this.handleSubmit(this.state.formIsValid);
         //this.setState({show: !this.state.show})
     };
 
@@ -99,7 +116,14 @@ class CreatePage extends React.Component{
         const Members = this.props.members.map((item)=>{
             return(
                 <Form.Group>
-                    <Form.Label>{item[0].toUpperCase() + item.substr(1,)}</Form.Label>
+                    <Form.Label>
+                        {item[0].toUpperCase() + item.substr(1,)}{' '}
+                        {this.state.formIsValid ? 
+                            null
+                            :
+                            <Badge variant='danger'>{this.state.errors[item]}</Badge>
+                        }
+                    </Form.Label>
                     <Form.Control   type='text' 
                                     placeholder={`Enter the movie ${item}`} 
                                     name={`${item}`} 
@@ -184,6 +208,7 @@ class CreatePage extends React.Component{
                     </Col>
                 </Row>
                 {MovieCreateConfirmation(this.state.movie)}
+
             </Form>
         )
     }
