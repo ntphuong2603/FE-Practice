@@ -15,22 +15,39 @@ class CreatePage extends React.Component{
                 rating: '',
                 time: ''
             },
-            show: false,
-            created: false,
-            formIsValid: false
+            status : {
+                isShow: false,
+                isCreated: false,
+                isFormValid: false
+            }
         };
-        this.handleOnChange = this.handleOnChange.bind(this);
-        this.handleClearForm = this.handleClearForm.bind(this);
         this.handleShow = this.handleShow.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleReset = this.handleReset.bind(this);
+        this.handleOnChange = this.handleOnChange.bind(this);
+        this.handleConfirm = this.handleConfirm.bind(this);
     }
 
-    handleClearForm = () => {
+    handleShow = () => {
+        this.setState({status: {
+            ...this.state.status, 
+            isShow: !this.state.status.isShow
+        }})
+    }
+
+    handleReset = () => {
         let movie = {
             name: '',
             rating: '',
             time: ''
         }
-        this.setState({movie: movie});
+        this.setState({
+            movie: movie, 
+            status : {
+                ...this.state.status,
+                isFormValid: false
+            }
+        });
         document.getElementById('createForm').reset();
     }
 
@@ -40,7 +57,7 @@ class CreatePage extends React.Component{
         const timeReg = /^\d{1,2}:\d{2}[,\d{1,2}:\d{2}]*?$/;
         let errors = this.state.errors;
         let movie = this.state.movie;
-        let formIsValid = false;
+        let status = this.state.status;
         switch (name) {
             case 'name':
                 let nameStr = value.trim();
@@ -74,42 +91,51 @@ class CreatePage extends React.Component{
                 break;
         }
         if (!errors.name.length && !errors.rating.length && !errors.time.length){
-            formIsValid = true;
+            status.isFormValid = true;
         }
-        this.setState({movie: movie, errors: errors, formIsValid: formIsValid});
+        this.setState({movie: movie, errros: errors, status: status});
     }
 
-    handleShow = () => {
-        if (this.state.created){
-            this.handleClearForm();
+    handleSubmit = () => {
+        if (this.state.status.isCreated){
+            this.handleReset();
         } 
-        if (this.state.formIsValid){
-            this.setState({show: !this.state.show, created: false})
+        if (this.state.status.isFormValid){
+            this.setState({
+                status: {
+                    ...this.state.status, 
+                    isShow: !this.state.isShow,
+                    isCreated: false
+                }
+            });
+        } else {
+            alert('All fields is required!!!')
         }
     };
 
-    handleSubmit(confirmStatus){
-        //event.preventDefault();
-        if (confirmStatus){
-            console.log(this.state.movie);
-            //this.handleShow();
-            fetch('http://localhost:5000/movie/create', {
-                headers: {'Content-Type':'application/json'},
-                method: 'POST',
-                body: JSON.stringify(this.state.movie)
-            })
-                .then(res => res.json())
-                .then(res => this.setState({movie: res.data, created: confirmStatus}))
-        } else {
-            document.getElementsByName('name').focus();
-        }
+    handleConfirmed = () => {
+        let movie = this.state.movie;
+        console.log(movie);
+        fetch('http://localhost:5000/movie/create', {
+            headers: {'Content-Type':'application/json'},
+            method: 'POST',
+            body: JSON.stringify(movie)
+        })
+            .then(res => res.json())
+            .then(res => this.setState({
+                movie: res.data,
+                status: {
+                    ...this.state.status, 
+                    isCreated: !this.state.status.isCreated
+                }
+            }))
     }
 
-    handelConfrim = (event) => {
+    handleConfirm = (event) => {
         event.preventDefault();
-        //this.handleSubmit(true)
-        this.handleSubmit(this.state.formIsValid);
-        //this.setState({show: !this.state.show})
+        if (this.state.status.isFormValid){
+            this.handleConfirmed();
+        }
     };
 
     render(){
@@ -118,7 +144,7 @@ class CreatePage extends React.Component{
                 <Form.Group>
                     <Form.Label>
                         {item[0].toUpperCase() + item.substr(1,)}{' '}
-                        {this.state.formIsValid ? 
+                        {this.state.status.isCreated ? 
                             null
                             :
                             <Badge variant='danger'>{this.state.errors[item]}</Badge>
@@ -134,15 +160,15 @@ class CreatePage extends React.Component{
 
         let MovieCreateConfirmation = (movie) => {
             return(
-                <Modal show={this.state.show} onHide={this.handleShow}>
-                    <Modal.Header closeButton>
+                <Modal show={this.state.status.isShow} onHide={this.handleShow}>
+                    <Modal.Header closeButton={this.handleShow}>
                         <Modal.Title>
-                            {this.state.created ? 'Movie created sucessfully' : 'Movie create confirmation'}
+                            {this.state.status.isCreated ? 'Movie created sucessfully' : 'Movie create confirmation'}
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <Form>
-                            {this.state.created ? 
+                            {this.state.status.isCreated ? 
                                 <Form.Group>
                                     <Row>
                                         <Col className='col-2'>
@@ -179,12 +205,11 @@ class CreatePage extends React.Component{
                                     <Button block variant="secondary" onClick={this.handleShow}>Cancel</Button>
                                 </Col>
                                 <Col>
-                                    {this.state.created ? 
+                                    {this.state.status.isCreated ? 
                                         null
                                         :
-                                        <Button block variant="danger" onClick={this.handelConfrim}>Confrim</Button>
+                                        <Button block variant="danger" onClick={this.handleConfirmed}>Confrim</Button>
                                     }
-                                    
                                 </Col>
                             </Row>
                         </Row>
@@ -201,14 +226,13 @@ class CreatePage extends React.Component{
                 {Members}
                 <Row>
                     <Col>
-                        <Button block variant='primary' onClick={this.handleShow}>Submit</Button>
+                        <Button block variant='primary' onClick={this.handleSubmit}>Submit</Button>
                     </Col>
                     <Col>
-                        <Button block variant='danger' onClick={this.handleClearForm}>Clear form</Button>
+                        <Button block variant='danger' onClick={this.handleReset}>Reset</Button>
                     </Col>
                 </Row>
                 {MovieCreateConfirmation(this.state.movie)}
-
             </Form>
         )
     }
