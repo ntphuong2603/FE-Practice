@@ -3,9 +3,9 @@ import {HashRouter, Route} from 'react-router-dom';
 import {Container, Row, Col} from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import MenuBar from './components/MenuBar';
-import {CreatePage, ReadPage, UpdatePage, DeletePage} from './pages/index';
-import CreatePageV2 from './pages/CreatePageV2';
-import CreatePageV3 from './pages/CreatePageV3';
+import {CreatePageV3, ReadPage, ReadPageV3, UpdatePage, DeletePage} from './pages/index';
+//import CreatePageV2 from './pages/CreatePageV2';
+//import CreatePageV3 from './pages/CreatePageV3';
 
 function App() {
   return (
@@ -16,7 +16,7 @@ function App() {
             <MenuBar/>
           </Col>
           <Col className="col-9">
-            <Route exact path='/read' component={()=><ReadPage headers={['No.', 'Movie', 'Rating', 'Select']} />}/>
+            <Route exact path='/read' component={()=><ReadPageV3 headers={['No.', 'Movie', 'Rating', 'Select']} />}/>
             {/* Previous version
             <Route path='/create' component={CreatePage}/>
             Version 2.0 adjust the props of CreatePage component 

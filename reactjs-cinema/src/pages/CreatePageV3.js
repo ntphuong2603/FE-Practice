@@ -159,6 +159,7 @@ class CreatePage extends React.Component {
     }
 
     render(){
+
         const MovieItems = this.props.items.map((item)=>{
             return(
                 <Form.Group>
@@ -167,6 +168,7 @@ class CreatePage extends React.Component {
                     </Form.Label>
                     <Form.Control
                         type='text'
+                        size='lg'
                         placeholder={`Enter the movie ${item}`}
                         name={item}
                         onChange={this.handleOnChange}
@@ -179,66 +181,62 @@ class CreatePage extends React.Component {
         })
 
         let MovieCreateConfirmation = (movie) => {
+            let modalTitle = 'Movie create confirmation !';
+            let movieCode = null;
+            let buttonList =
+                    <Row>
+                        <Col>
+                            <Button block variant="secondary" onClick={this.handleShowConfirmation}>Cancel</Button>{' '}
+                        </Col>  
+                        <Col>
+                            <Button block variant='primary' onClick={this.handleFormSubmit}>Confirm</Button>{' '}
+                        </Col>    
+                    </Row>
+            if (this.state.flags.isCreated){
+                modalTitle = 'Movie is creadted sucessfully !!!'
+                movieCode = 
+                    <Form.Group>
+                        <Row>
+                            <Col className='col-2'>
+                                <Form.Label>Code</Form.Label>
+                            </Col>
+                            <Col>
+                                <Form.Control value={this.state.movies._id}/>
+                            </Col>
+                        </Row>
+                    </Form.Group>
+                buttonList = 
+                    <Row>
+                        <Col>
+                            <Button block variant="success" onClick={this.handleShowConfirmation}>Close</Button>{' '}
+                        </Col>  
+                    </Row> 
+            }
             return(
                 <Modal show={this.state.flags.isShowConfirmation} onHide={this.handleShowConfirmation}>
                     <Modal.Header closeButton>
-                        <Modal.Title>
-                            {!this.state.flags.isCreated ? 
-                                'Movie create confirmation' 
-                            :
-                                'Movie is created sucessfully !!!'
-                            }
-                        </Modal.Title>
+                        <Modal.Title> {modalTitle} </Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                    {!this.state.flags.isCreated ? null : 
-                        <Form.Group>
-                            <Row>
-                                <Col className='col-2'>
-                                    <Form.Label>Code</Form.Label>
-                                </Col>
-                                <Col>
-                                    <Form.Control type='text' value={this.state.movies._id}/>
-                                </Col>
-                            </Row>
-                        </Form.Group>
-                    }
-                    {this.props.items.map(item=>{
-                        return(
-                            <Form.Group>
-                                <Row>
-                                    <Col className='col-2'>
-                                        <Form.Label>{item[0].toUpperCase() + item.substr(1,)}</Form.Label>
-                                    </Col>
-                                    <Col>
-                                        <Form.Control type='text' value={this.state.movies[item]}/>
-                                    </Col>
-                                </Row>
-                            </Form.Group>   
-                        )
-                    })}
+                        {movieCode}
+                        {this.props.items.map(item=>{
+                            return(
+                                <Form.Group>
+                                    <Row>
+                                        <Col className='col-2'>
+                                            <Form.Label>{item[0].toUpperCase() + item.substr(1,)}</Form.Label>
+                                        </Col>
+                                        <Col>
+                                            <Form.Control value={this.state.movies[item]}/>
+                                        </Col>
+                                    </Row>
+                                </Form.Group>   
+                            )
+                        })}
                     </Modal.Body>
                     <Modal.Footer>
-                            <Col className='col-2'/>
-                            <Col>  
-                                {!this.state.flags.isCreated ? 
-                                    <Row>
-                                        <Col>
-                                            <Button block variant="secondary" onClick={this.handleShowConfirmation}>Cancel</Button>{' '}
-                                        </Col>  
-                                        <Col>
-                                            <Button block variant='primary' onClick={this.handleFormSubmit}>Confirm</Button>{' '}
-                                        </Col>    
-                                    </Row> 
-                                :
-                                    <Row>
-                                        <Col>
-                                            <Button block variant="success" onClick={this.handleShowConfirmation}>Close</Button>{' '}
-                                        </Col>  
-                                    </Row> 
-                                }
-                                
-                            </Col>
+                        <Col className='col-2'/>
+                        <Col> {buttonList} </Col>
                     </Modal.Footer>
                 </Modal>
             )}
@@ -259,7 +257,7 @@ class CreatePage extends React.Component {
                         <Button block size='lg' variant='danger' onClick={this.handleReset}>Reset</Button>
                     </Col>
                 </Row>
-                {MovieCreateConfirmation('')}
+                {MovieCreateConfirmation(this.state.movies)}
             </Form>
         )
     }
