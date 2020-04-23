@@ -6,14 +6,26 @@ class ReadPage extends React.Component{
         super(props);
         this.initialState();
         this.handleShow = this.handleShow.bind(this);
-        this.handleShowConfirm = this.handleShowConfirm.bind(this);
+        this.handleOnChange = this.handleOnChange.bind(this);
     }
 
     initialState = () => {
+        const itemName = ['name', 'rating', 'time'];
+        const statusList = {};
+        ['isEdit', 'isShow', 'selectedMovie', 'errors'].map(item=>{
+            statusList[item] = {}
+            /*
+            if (item=='errors'){
+                itemName.map((eachItem)=>{
+                    statusList[item][eachItem] = "";
+                })
+            }
+            */
+        })
         this.state = {
-            itemName : ['name', 'rating', 'time'],
+            itemName : itemName,
             movies: [],
-            status: {}
+            status: statusList,
         };
     }
 
@@ -23,71 +35,124 @@ class ReadPage extends React.Component{
             .then(res => this.setState({movies: res.data}))
     }
 
-    setStatus = ([key], [value]) => {
+    setStatus = (key, value) => {
         let status = {...this.state.status};
+        //console.log(key, value);
         key.forEach((eachKey, index)=>{
-            status[]
+            status[eachKey] = value[index];
         })
-        status[key] = value;
         this.setState({
             ...this.state,
-            status: {
-                ...this.state.status,
-                status,
-            }
+            status
         })
     }
 
     handleAction = (actionName, index) => {
-        let isEdit = true;
-        if (actionName === 'remove'){
-            isEdit = false;
-        }
+        let isEdit = actionName === 'edit';
+        let isShow = this.state.status.isShow;
         let selectedMovie = this.state.movies[index];
-        this.setStatus(isEdit, isEdit);
-        this.setState(selectedMovie, selectedMovie);
-        /*
-        this.setState({
-            status: {
-                isShow: !this.state.status.isShow,
-                isEdit: isEdit,
-                movie: selectedMovie
-            }
-        })
-        */
+        this.setStatus(['isEdit', 'isShow', 'selectedMovie'], [isEdit, !isShow, selectedMovie]);
     }
 
     handleShow = () => {
-        let isShow = this.state.status.isShow;
-        if (isShow === null){
-            isShow = false;
-        } 
-        this.setStatus(isShow, !isShow)
+        this.setStatus(['isShow'], [!this.state.status.isShow])
     }
 
-    handleShowConfirm = () => {
+    setKeyValue = (key, errorValue, movieValue) => {
+        let preErrors = {...this.state.status.errors};
+        let preMovies = {...this.state.status.selectedMovie};
+        let movieName = this.state.status.selectedMovie.name;
+        preErrors[key] = errorValue;
+        preMovies[key] = movieValue;
+        let isShowSubmitButton = false;
+        if ((key ==='name' && movieValue.length !== 0) || movieName.length !== 0) {
+            isShowSubmitButton = true
+        }
         this.setState({
+            ...this.state,
             status: {
                 ...this.state.status,
-                isShowConfirm: !this.state.status.isShowConfirm
+                errors: preErrors,
+                selectedMovie: preMovies
             }
         })
+    }
+
+    movieNameValidation = (movieName) => {
+        let errorStr = 'Movie name must NOT be empty';
+        let name = movieName.trim();
+        if (name.length) {
+            errorStr = '';
+        } else {
+            name = '';
+        }
+        return [errorStr, name]
+    }
+
+    movieRatingValidation = (movieRating) => {
+        let errorStr = 'Movie rating must be a NUMBER';
+        let ratingNumber = parseFloat(movieRating);
+        if (!ratingNumber){
+            ratingNumber = 0.0;
+        } else {
+            errorStr = ''
+        }
+        return [errorStr, ratingNumber]
+    }
+
+    movieTimeValidation = (movieTime) => {
+        const timePattern = /^\d{1,2}:\d{2}[,\d{1,2}:\d{2}]*?$/;
+        let errorStr = 'Movie time must be a string PATTERN hh:mm or hh:mm,hh:mm'
+        let timeArray = movieTime.trim()
+        if (timePattern.test(timeArray)){
+            errorStr = '';
+            timeArray = timeArray.split(',');
+        } else {
+            timeArray = [];
+        }
+        return [errorStr, timeArray]
+    }
+
+    movieValidation = (name, value) => {
+        let [errorStr, returnValue] = '';
+        switch (name) {
+            case 'name':
+                [errorStr, returnValue] = this.movieNameValidation(value);
+                break;
+            case 'rating':
+                [errorStr, returnValue] = this.movieRatingValidation(value);
+                break;
+            case 'time':
+                [errorStr, returnValue] = this.movieTimeValidation(value);
+                break;
+            default:
+                break;
+        }
+        return [name, errorStr, returnValue]
+    }
+
+    handleOnChange = (event) => {
+        let name = event.target.name;
+        let value = event.target.value;
+        console.log(name, value);
+        let [keyName, errorStr, keyValue] = this.movieValidation(name, value);
+        this.setKeyValue(keyName, errorStr, keyValue);
     }
 
     updadteMovies = (movieId) => {
-        let moviesNew = [];
-        this.state.movies.forEach(function(item){
-            if (item._id !== movieId){
-                moviesNew.push(item);
+        let newMovies = this.state.movies;
+        newMovies.forEach((item, index)=>{
+            if (item._id === movieId){
+                newMovies.splice(index, 1)
             }
         })
-        console.log(moviesNew);
-        this.setState({movies: moviesNew});
+        console.log(newMovies);
+        this.setState({movies: newMovies});
     }
 
     handleConfirm = () => {
         let action = this.state.status.isEdit ? 'update' : 'delete';
-        let movie_id = this.state.status.movie._id;
+        let movie_id = this.state.status.selectedMovie._id;
         let action_url = `http://localhost:5000/movie/${action}/${movie_id}`;
         fetch(action_url, {
             headers: {'Content-Type':'application/json'},
@@ -121,7 +186,7 @@ class ReadPage extends React.Component{
                                         <Form.Label>Code</Form.Label>
                                     </Col>
                                     <Col>
-                                        <Form.Control type='label' value={this.state.status.movie._id}/>
+                                        <Form.Control type='text' readOnly value={this.state.status.selectedMovie._id}/>
                                     </Col>
                                 </Row>
                             </Form.Group>
@@ -133,7 +198,17 @@ class ReadPage extends React.Component{
                                                 <Form.Label>{item[0].toUpperCase() + item.substr(1,)}</Form.Label>
                                             </Col>
                                             <Col>
-                                                <Form.Control type='text' value={this.state.status.movie[item]}/>
+                                                <Form.Control 
+                                                    type='text' 
+                                                    value={this.state.status.selectedMovie[item]}
+                                                    readOnly={!this.state.status.isEdit}
+                                                    name = {item}
+                                                    onChange={this.handleOnChange}
+                                                />
+                                                {this.state.status.errors[item] ?
+                                                    <Form.Control plaintext value={this.state.status.errors[item]}/>
+                                                    : null
+                                                }
                                             </Col>
                                         </Row>
                                     </Form.Group>
@@ -144,7 +219,9 @@ class ReadPage extends React.Component{
                     <Modal.Footer>
                         <Row className="col-12">
                             <Col>
-                                <Button block variant="danger" onClick={this.handleConfirm}>Confirm</Button>
+                                <Button block variant="danger" onClick={this.handleConfirm}>
+                                    <b>{this.state.status.isEdit?'Update':'Delete'}</b>
+                                </Button>
                             </Col>
                             <Col>
                                 <Button block variant="primary" onClick={this.handleShow}>Cancel</Button>
@@ -182,7 +259,7 @@ class ReadPage extends React.Component{
                 </thead>
                 <tbody>
                     {tableBody}
-                    {ActionModal}
+                    {ActionModal()}
                 </tbody>
             </Table>
         )
