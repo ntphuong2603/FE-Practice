@@ -13,7 +13,7 @@ class ReadPage extends React.Component{
         const itemName = ['name', 'rating', 'time'];
         const statusList = {};
         ['isEdit', 'isShow', 'selectedMovie', 'errors'].map(item=>{
-            statusList[item] = {}
+            statusList[item] = ''
             /*
             if (item=='errors'){
                 itemName.map((eachItem)=>{
@@ -139,14 +139,18 @@ class ReadPage extends React.Component{
         this.setKeyValue(keyName, errorStr, keyValue);
     }
 
-    updadteMovies = (movieId) => {
+    updadteMovies = (movie) => {
         let newMovies = this.state.movies;
         newMovies.forEach((item, index)=>{
-            if (item._id === movieId){
-                newMovies.splice(index, 1)
+            if (item._id === this.state.status.selectedMovie._id){
+                if (this.state.status.isEdit){
+                    newMovies[index] = movie
+                } else {
+                    newMovies.splice(index, 1)
+                }
             }
         })
-        console.log(newMovies);
+        //console.log(newMovies);
         this.setState({movies: newMovies});
     }
 
@@ -156,10 +160,11 @@ class ReadPage extends React.Component{
         let action_url = `http://localhost:5000/movie/${action}/${movie_id}`;
         fetch(action_url, {
             headers: {'Content-Type':'application/json'},
-            method: this.state.status.isEdit ? 'POST' : 'DELETE'
+            method: this.state.status.isEdit ? 'POST' : 'DELETE',
+            body: JSON.stringify(this.state.status.selectedMovie)
         })
             .then(res => res.json())
-            .then(res => this.updadteMovies(res.data._id))
+            .then(res => this.updadteMovies(res.data))
         this.handleShow();
     }
 
