@@ -30,7 +30,9 @@ class ReadPage extends React.Component{
     }
 
     componentDidMount(){
-        fetch('http://localhost:5000/movie/all')
+        const urlHeroku = 'https://nodejs-cinema.herokuapp.com/api/movies';
+        const urlLocalHost = 'http://localhost:5000/movie/all';
+        fetch(urlHeroku)
             .then(res => res.json())
             .then(res => this.setState({movies: res.data}))
     }

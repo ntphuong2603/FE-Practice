@@ -143,9 +143,11 @@ class CreatePage extends React.Component {
 
     handleFormSubmit = () => {
         //fetch functions
-        fetch('http://localhost:5000/movie/create',{
+        let urlHeroku = 'https://nodejs-cinema.herokuapp.com/api';
+        const urlLocalHost = 'http://localhost:5000/movie/create';
+        fetch(urlHeroku,{
             headers: {'Content-Type':'application/json'},
-            method: 'POST',
+            method: 'PUT',
             body: JSON.stringify(this.state.movies)
         }).then(res => res.json()).then(res => this.setState({
                 ...this.state,
