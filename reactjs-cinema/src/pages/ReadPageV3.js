@@ -1,12 +1,15 @@
 import React from 'react';
-import {Table, Button, Row, Col, Modal, Form, Badge} from 'react-bootstrap';
+import {Table, Button, Row, Col, Modal, Form, Badge, OverlayTrigger} from 'react-bootstrap';
+import {FaEdit, FaSortAmountDown, FaSortAmountDownAlt, FaTrash} from 'react-icons/fa';
 
 class ReadPage extends React.Component{
     constructor(props){
         super(props);
         this.initialState(['name', 'rating', 'time']);
         this.handleShow = this.handleShow.bind(this);
+        this.handleSorting = this.handleSorting.bind(this);
         this.handleOnChange = this.handleOnChange.bind(this);
+        this.handleAsc = this.handleAsc.bind(this);
     }
 
     initialState = (movieItems) => {
@@ -16,7 +19,29 @@ class ReadPage extends React.Component{
             selectedMovie: {},
             errors: {},
             isShow: false,
-            isEdit: true
+            isEdit: true,
+            isSorting: false,
+            isAscName: false,
+            isAscRating: false,
+        }
+    }
+
+    dataSortingAsc = (isAsc, sortField) => {
+        //const sortField = 'name';
+        //let sortingAsc = this.state.movieList;
+        function SortMethod(movieA, movieB){
+            if (movieA[sortField] > movieB[sortField]) {
+                return -1;
+            }
+            if (movieB[sortField] < movieB[sortField]) {
+                return 1;
+            }
+            return 0;
+        }
+        if (!isAsc){
+            this.state.movieList.sort((movieA,movieB)=>SortMethod(movieA, movieB));
+        } else {
+            this.state.movieList.reverse((movieA,movieB)=>SortMethod(movieA, movieB));
         }
     }
 
@@ -46,6 +71,20 @@ class ReadPage extends React.Component{
 
     handleShow = () => {
         this.setStatus(['isShow'], [!this.state.isShow])
+    }
+
+    handleSorting = () => {
+        this.setStatus(['isSorting'], [!this.state.isSorting])
+        if (this.state.isSorting){
+            this.dataSortingAsc(this.state.isAsc);
+        }
+    }
+
+    handleAsc= (sortField) => {
+        let sortFieldName = `isAsc${sortField[0].toUpperCase()}${sortField.substr(1,)}`
+        //console.log(sortFieldName);
+        this.setStatus([sortFieldName], [!this.state[sortFieldName]])
+        this.dataSortingAsc(this.state[sortFieldName], sortField);
     }
 
     setKeyValue = (key, errorValue, movieValue) => {
@@ -149,8 +188,39 @@ class ReadPage extends React.Component{
 
     render(){
         const tableHeader = this.props.headers.map((item)=>{
-            return(
-                <th>{item}</th>
+            const ItemSortMovieName = 
+                <Row>
+                    <Col className='col-4'>{item}</Col>
+                    <Col align='right'>
+                        <Form.Check id='movieSorting' checked={this.state.isSorting} type='switch' label='Sort' inline onClick={this.handleSorting}/>
+                        <Form.Check id='checkboxAsc-movieName' 
+                            custom inline 
+                            checked={this.state.isAscName} 
+                            type='checkbox' 
+                            disabled={!this.state.isSorting}
+                            label={this.state.isAscName ? <FaSortAmountDownAlt/> : <FaSortAmountDown/>} 
+                            onClick={()=>this.handleAsc('name')}/>
+                    </Col>
+                </Row>
+            const ItemSortMovieRating = 
+                <Row>
+                    <Col className='col-4'>{item}</Col>
+                    <Col align='right'>
+                        <Form.Check id='checkboxAsc-movieRating' 
+                            custom inline 
+                            checked={this.state.isAscRating} 
+                            type='checkbox' 
+                            disabled={!this.state.isSorting}
+                            label={this.state.isAscRating ? <FaSortAmountDownAlt/> : <FaSortAmountDown/>} 
+                            onClick={()=>this.handleAsc('rating')}/>
+                    </Col>
+                </Row>
+            return (
+                <th>
+                    {item !== 'Movie' && item !== 'Rating' ? item: null}
+                    {item==='Movie' ? ItemSortMovieName: null}
+                    {item==='Rating' ? ItemSortMovieRating: null}
+                </th>
             )
         });
         
@@ -223,14 +293,10 @@ class ReadPage extends React.Component{
                     <td>{item.name}</td>
                     <td>{item.rating}</td>
                     <td>
-                        <Row>
-                            <Col>
-                                <Button block variant="primary" size='sm' onClick={()=>this.handleAction('edit', index)}>Edit</Button>
-                            </Col>
-                            <Col>
-                                <Button block variant="danger" size='sm' onClick={()=>this.handleAction('remove', index)}>Remove</Button>
-                            </Col>
-                        </Row>
+                        <OverlayTrigger/>
+                        <Button variant="primary" size='sm' onClick={()=>this.handleAction('edit', index)} hover={()=>{alert('Hover button')}}><FaEdit/></Button>
+                        {' '}
+                        <Button variant="danger" size='sm' onClick={()=>this.handleAction('remove', index)}><FaTrash/></Button>
                     </td>
                 </tr>
             )
