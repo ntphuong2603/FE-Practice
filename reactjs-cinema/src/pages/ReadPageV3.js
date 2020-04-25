@@ -1,6 +1,6 @@
 import React from 'react';
 import {Table, Button, Row, Col, Modal, Form, Badge, OverlayTrigger, Tooltip} from 'react-bootstrap';
-import {FaEdit, FaSortAmountDown, FaSortAmountDownAlt, FaTrash, FaPlusCircle, FaPlusSquare, FaRegFile, FaMusic} from 'react-icons/fa';
+import {FaEdit, FaSortAmountDown, FaSortAmountDownAlt, FaTrash} from 'react-icons/fa';
 
 class ReadPage extends React.Component{
     constructor(props){
