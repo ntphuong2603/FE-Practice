@@ -1,6 +1,6 @@
 import React from 'react';
-import {Table, Button, Row, Col, Modal, Form, Badge, OverlayTrigger} from 'react-bootstrap';
-import {FaEdit, FaSortAmountDown, FaSortAmountDownAlt, FaTrash} from 'react-icons/fa';
+import {Table, Button, Row, Col, Modal, Form, Badge, OverlayTrigger, Tooltip} from 'react-bootstrap';
+import {FaEdit, FaSortAmountDown, FaSortAmountDownAlt, FaTrash, FaPlusCircle, FaPlusSquare, FaRegFile, FaMusic} from 'react-icons/fa';
 
 class ReadPage extends React.Component{
     constructor(props){
@@ -190,7 +190,9 @@ class ReadPage extends React.Component{
         const tableHeader = this.props.headers.map((item)=>{
             const ItemSortMovieName = 
                 <Row>
-                    <Col className='col-4'>{item}</Col>
+                    <Col className='col-4'>
+                        {item}
+                    </Col>
                     <Col align='right'>
                         <Form.Check id='movieSorting' checked={this.state.isSorting} type='switch' label='Sort' inline onClick={this.handleSorting}/>
                         <Form.Check id='checkboxAsc-movieName' 
@@ -293,10 +295,27 @@ class ReadPage extends React.Component{
                     <td>{item.name}</td>
                     <td>{item.rating}</td>
                     <td>
-                        <OverlayTrigger/>
-                        <Button variant="primary" size='sm' onClick={()=>this.handleAction('edit', index)} hover={()=>{alert('Hover button')}}><FaEdit/></Button>
+                        <OverlayTrigger
+                            key={`edit${item._id}`}
+                            placement='left'
+                            overlay={
+                                <Tooltip id={`tooltipEdit${item._id}`}>
+                                    Edit item <strong variant='primary'>{item._id.substr(1,12)}...</strong>
+                                </Tooltip>
+                            }>
+                            <Button variant="outline-primary" size='sm' onClick={()=>this.handleAction('edit', index)} hover={()=>{alert('Hover button')}}><FaEdit/></Button>
+                        </OverlayTrigger>
                         {' '}
-                        <Button variant="danger" size='sm' onClick={()=>this.handleAction('remove', index)}><FaTrash/></Button>
+                        <OverlayTrigger
+                            key={`remove${item._id}`}
+                            placement='top'
+                            overlay={
+                                <Tooltip id={`tooltipRemove${item._id}`}>
+                                    Remove item <strong>{item._id.substr(1,10)}...</strong>
+                                </Tooltip>
+                            }>
+                            <Button variant='outline-danger' size='sm' onClick={()=>this.handleAction('remove', index)}><FaTrash/></Button>
+                        </OverlayTrigger>
                     </td>
                 </tr>
             )
