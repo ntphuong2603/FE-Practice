@@ -7,7 +7,9 @@ class ReadPage extends React.Component{
         super(props);
         this.initialState(['name', 'rating', 'time']);
         this.handleShow = this.handleShow.bind(this);
+        this.handleSorting = this.handleSorting.bind(this);
         this.handleOnChange = this.handleOnChange.bind(this);
+        this.handleAsc = this.handleAsc.bind(this);
     }
 
     initialState = (movieItems) => {
@@ -17,7 +19,29 @@ class ReadPage extends React.Component{
             selectedMovie: {},
             errors: {},
             isShow: false,
-            isEdit: true
+            isEdit: true,
+            isSorting: false,
+            isAscName: false,
+            isAscRating: false,
+        }
+    }
+
+    dataSortingAsc = (isAsc, sortField) => {
+        //const sortField = 'name';
+        //let sortingAsc = this.state.movieList;
+        function SortMethod(movieA, movieB){
+            if (movieA[sortField] > movieB[sortField]) {
+                return -1;
+            }
+            if (movieB[sortField] < movieB[sortField]) {
+                return 1;
+            }
+            return 0;
+        }
+        if (!isAsc){
+            this.state.movieList.sort((movieA,movieB)=>SortMethod(movieA, movieB));
+        } else {
+            this.state.movieList.reverse((movieA,movieB)=>SortMethod(movieA, movieB));
         }
     }
 
@@ -47,6 +71,20 @@ class ReadPage extends React.Component{
 
     handleShow = () => {
         this.setStatus(['isShow'], [!this.state.isShow])
+    }
+
+    handleSorting = () => {
+        this.setStatus(['isSorting'], [!this.state.isSorting])
+        if (this.state.isSorting){
+            this.dataSortingAsc(this.state.isAsc);
+        }
+    }
+
+    handleAsc= (sortField) => {
+        let sortFieldName = `isAsc${sortField[0].toUpperCase()}${sortField.substr(1,)}`
+        //console.log(sortFieldName);
+        this.setStatus([sortFieldName], [!this.state[sortFieldName]])
+        this.dataSortingAsc(this.state[sortFieldName], sortField);
     }
 
     setKeyValue = (key, errorValue, movieValue) => {
