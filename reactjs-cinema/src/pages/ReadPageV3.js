@@ -1,5 +1,6 @@
 import React from 'react';
 import {Table, Button, Row, Col, Modal, Form, Badge} from 'react-bootstrap';
+import {FaSortDown, FaSortAmountDownAlt, FaSortAmountDown, FaPencilAlt, FaTrashAlt} from 'react-icons/fa';
 
 class ReadPage extends React.Component{
     constructor(props){
@@ -150,7 +151,11 @@ class ReadPage extends React.Component{
     render(){
         const tableHeader = this.props.headers.map((item)=>{
             return(
-                <th>{item}</th>
+                <th>
+                    {item} {' '}
+                    {item==='Movie' ? 
+                    <Button size='sm' variant='outline-primary'><FaSortDown onClick={()=>alert('Just clicked me')}/></Button> :null}{' '}
+                </th>
             )
         });
         
@@ -223,14 +228,9 @@ class ReadPage extends React.Component{
                     <td>{item.name}</td>
                     <td>{item.rating}</td>
                     <td>
-                        <Row>
-                            <Col>
-                                <Button block variant="primary" size='sm' onClick={()=>this.handleAction('edit', index)}>Edit</Button>
-                            </Col>
-                            <Col>
-                                <Button block variant="danger" size='sm' onClick={()=>this.handleAction('remove', index)}>Remove</Button>
-                            </Col>
-                        </Row>
+                        <Button variant="primary" size='sm' onClick={()=>this.handleAction('edit', index)}><FaPencilAlt/></Button>
+                        {' '}
+                        <Button variant="danger" size='sm' onClick={()=>this.handleAction('remove', index)}><FaTrashAlt/></Button>
                     </td>
                 </tr>
             )
@@ -244,6 +244,7 @@ class ReadPage extends React.Component{
                 <tbody>
                     {tableBody}
                     {ActionModal()}
+                    <span class="glyphicon glyphicon-sort-by-attributes" aria-hidden="true"></span>
                 </tbody>
             </Table>
         )
