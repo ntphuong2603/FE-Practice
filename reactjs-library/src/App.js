@@ -1,14 +1,15 @@
 import React from 'react';
-import Header from './compenents/Header';
-import MenuBar from './compenents/MenuBar';
-import Contents from './compenents/Content';
-import Footer from './compenents/Footer';
+import Header from './components/Header';
+import MenuBar from './components/MenuBar';
+import Contents from './components/Content';
+import Footer from './components/Footer';
 
 function App() {
+  const menu = ['Home page', 'Book', 'Author', 'Genre', 'Book-Instance', 'About'];
   return (
     <div>
       <Header/>
-      <MenuBar/>
+      <MenuBar menu = {menu}/>
       <Contents/>
       <Footer/>
     </div>
