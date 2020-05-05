@@ -1,160 +1,318 @@
 import React from 'react';
-import {Table, Button, Row, Col, Modal, Form} from 'react-bootstrap';
+import {Table, Button, Row, Col, Modal, Form, Badge, OverlayTrigger, Tooltip} from 'react-bootstrap';
+import {FaSortAmountDownAlt, FaSortAmountDown, FaEdit, FaTrash} from 'react-icons/fa';
 
 class ReadPage extends React.Component{
     constructor(props){
         super(props);
-        this.state = {
-            itemName : ['name', 'rating', 'time'],
-            movies: [],
-            status: {
-                isShow: false,
-                isShowConfirm: false,
-                isEdit: true,
-                movie: {},
-            }
-        };
+        this.initialState(['name', 'rating', 'time']);
         this.handleShow = this.handleShow.bind(this);
-        this.handleShowConfirm = this.handleShowConfirm.bind(this);
+        this.handleSorting = this.handleSorting.bind(this);
+        this.handleOnChange = this.handleOnChange.bind(this);
+        this.handleAsc = this.handleAsc.bind(this);
+    }
+
+    initialState = (movieItems) => {
+        this.state = {
+            movieItems: movieItems,
+            movieList: [],
+            selectedMovie: {},
+            errors: {},
+            isShow: false,
+            isEdit: true,
+            isSorting: false,
+            isAscName: false,
+            isAscRating: false,
+            url: {
+                Heroku: 'https://nodejs-cinema.herokuapp.com/api/movies',
+                LocalHost: 'http://localhost:8080/api/movies'
+            }
+        }
+    }
+
+    dataSortingAsc = (isAsc, sortField) => {
+        function SortMethod(movieA, movieB){
+            if (movieA[sortField] > movieB[sortField]) {
+                return -1;
+            }
+            if (movieA[sortField] < movieB[sortField]) {
+                return 1;
+            }
+            return 0;
+        }
+        if (!isAsc){
+            this.state.movieList.sort((movieA,movieB)=>SortMethod(movieA, movieB));
+        } else {
+            this.state.movieList.reverse((movieA,movieB)=>SortMethod(movieA, movieB));
+        }
     }
 
     componentDidMount(){
-        fetch('http://localhost:5000/movie/all')
+        const urlString = this.state.url.Heroku
+        fetch(urlString)
             .then(res => res.json())
-            .then(res => this.setState({movies: res.data}))
+            .then(res => this.setState({movieList: res.data}))
+    }
+
+    setStatus = (key, value) => {
+        let preState = this.state;
+        key.forEach((eachKey, index)=>{
+            preState[eachKey] = value[index]
+        })
+        this.setState(preState)
     }
 
     handleAction = (actionName, index) => {
-        let isEdit = true;
-        if (actionName === 'remove'){
-            isEdit = false;
-        }
-
-        this.setState({
-            status: {
-                isShow: !this.state.status.isShow,
-                isEdit: isEdit,
-                movie: this.state.movies[index]
-            }
-        })
+        let isEdit = actionName === 'edit';
+        let isShow = this.state.isShow;
+        let selectedMovie = this.state.movieList[index];
+        let errors = {}
+        this.setStatus(['isEdit', 'isShow', 'selectedMovie', 'errors'], [isEdit, !isShow, selectedMovie, errors]);
     }
 
     handleShow = () => {
+        this.setStatus(['isShow'], [!this.state.isShow])
+    }
+
+    handleSorting = () => {
+        this.setStatus(['isSorting'], [!this.state.isSorting])
+        if (this.state.isSorting){
+            this.dataSortingAsc(this.state.isAsc);
+        }
+    }
+
+    handleAsc= (sortField) => {
+        let sortFieldName = `isAsc${sortField[0].toUpperCase()}${sortField.substr(1,)}`
+        this.setStatus([sortFieldName], [!this.state[sortFieldName]])
+        this.dataSortingAsc(this.state[sortFieldName], sortField);
+    }
+
+    setKeyValue = (key, errorValue, movieValue) => {
+        let preErrors = {...this.state.errors};
+        let preMovies = {...this.state.selectedMovie};
+        preErrors[key] = errorValue;
+        preMovies[key] = movieValue;
         this.setState({
-            status: {
-                ...this.state.status,
-                isShow: !this.state.status.isShow
-            }
+            ...this.state,
+            selectedMovie: preMovies,
+            errors: preErrors
         })
     }
 
-    handleShowConfirm = () => {
-        this.setState({
-            status: {
-                ...this.state.status,
-                isShowConfirm: !this.state.status.isShowConfirm
-            }
-        })
+    movieNameValidation = (movieName) => {
+        let errorStr = 'Movie name must NOT be empty';
+        let name = movieName.trim();
+        if (name.length!==0) {
+            errorStr = '';
+        }
+        return [errorStr, movieName]
     }
 
-    updadteMovies = (movieId) => {
-        let moviesNew = [];
-        this.state.movies.forEach(function(item){
-            if (item._id !== movieId){
-                moviesNew.push(item);
+    movieRatingValidation = (movieRating) => {
+        let errorStr = 'Movie rating must be a NUMBER';
+        if (!isNaN(parseFloat(movieRating))){
+            errorStr = ''
+        }
+        return [errorStr, movieRating]
+    }
+
+    movieTimeValidation = (movieTime) => {
+        const timePattern = /^\d{1,2}:\d{2}(,\d{1,2}:\d{2})*?$/;
+        let errorStr = 'Movie time must be a string PATTERN hh:mm or hh:mm,hh:mm'
+        let timeArray = movieTime.trim()
+        if (timePattern.test(timeArray)){
+            errorStr = '';
+            timeArray = timeArray.split(',');
+        }
+        return [errorStr, timeArray];
+    }
+
+    movieValidation = (name, value) => {
+        let [errorStr, returnValue] = '';
+        switch (name) {
+            case 'name':
+                [errorStr, returnValue] = this.movieNameValidation(value);
+                break;
+            case 'rating':
+                [errorStr, returnValue] = this.movieRatingValidation(value);
+                break;
+            case 'time':
+                [errorStr, returnValue] = this.movieTimeValidation(value);
+                break;
+            default:
+                break;
+        }
+        return [name, errorStr, returnValue]
+    }
+
+    handleOnChange = (event) => {
+        let name = event.target.name;
+        let value = event.target.value;
+        let [keyName, errorStr, keyValue] = this.movieValidation(name, value);
+        this.setKeyValue(keyName, errorStr, keyValue);
+    }
+
+    updadteMovies = (success) => {
+        let newMovies = this.state.movieList;
+        let selectedMovieIndex = null;
+        newMovies.forEach((item, index)=>{
+            if (item._id === this.state.selectedMovie._id){
+                selectedMovieIndex = index;
             }
         })
-        console.log(moviesNew);
-        this.setState({movies: moviesNew});
+        if (this.state.isEdit){
+            newMovies[selectedMovieIndex] = this.state.selectedMovie;
+        } else {
+            newMovies.splice(selectedMovieIndex, 1)
+        }
+        if (success){
+            this.setState({movieList: newMovies});
+        }
     }
 
     handleConfirm = () => {
-        let action = this.state.status.isEdit ? 'update' : 'delete';
-        let movie_id = this.state.status.movie._id;
-        let action_url = `http://localhost:5000/movie/${action}/${movie_id}`;
-        fetch(action_url, {
+        let movieId = this.state.selectedMovie._id;
+        const urlString = this.state.url.Heroku + `/${movieId}`;
+        fetch(urlString, {
             headers: {'Content-Type':'application/json'},
-            method: this.state.status.isEdit ? 'POST' : 'DELETE'
+            method: this.state.isEdit ? 'PUT' : 'DELETE',
+            body: JSON.stringify(this.state.selectedMovie)
         })
             .then(res => res.json())
-            .then(res => this.updadteMovies(res.data._id))
+            .then(res => this.updadteMovies(res.success))
         this.handleShow();
     }
 
     render(){
         const tableHeader = this.props.headers.map((item)=>{
-            return(
-                <th>{item}</th>
+            const ItemSortMovieName = 
+                <Row>
+                    <Col className='col-4'>
+                        {item}
+                    </Col>
+                    <Col align='right'>
+                        <Form.Check id='movieSorting' checked={this.state.isSorting} type='switch' label='Sort' inline onClick={this.handleSorting}/>
+                        <Form.Check id='checkboxAsc-movieName' 
+                            custom inline 
+                            checked={this.state.isAscName} 
+                            type='checkbox' 
+                            disabled={!this.state.isSorting}
+                            label={this.state.isAscName ? <FaSortAmountDownAlt/> : <FaSortAmountDown/>} 
+                            onClick={()=>this.handleAsc('name')}/>
+                    </Col>
+                </Row>
+            const ItemSortMovieRating = 
+                <Row>
+                    <Col className='col-4'>{item}</Col>
+                    <Col align='right'>
+                        <Form.Check id='checkboxAsc-movieRating' 
+                            custom inline 
+                            checked={this.state.isAscRating} 
+                            type='checkbox' 
+                            disabled={!this.state.isSorting}
+                            label={this.state.isAscRating ? <FaSortAmountDownAlt/> : <FaSortAmountDown/>} 
+                            onClick={()=>this.handleAsc('rating')}/>
+                    </Col>
+                </Row>
+            return (
+                <th>
+                    {item !== 'Movie' && item !== 'Rating' ? item: null}
+                    {item==='Movie' ? ItemSortMovieName: null}
+                    {item==='Rating' ? ItemSortMovieRating: null}
+                </th>
             )
         });
-
-        const ActionModal = 
-            <Modal show={this.state.status.isShow} onHide={this.handleShow}>
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        <b variant="danger">{this.state.status.isEdit ? 'Edit' : 'Delete'}</b> movie
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form>
-                        <Form.Group>
-                            <Row>
-                                <Col className='col-2'>
-                                    <Form.Label>Code</Form.Label>
-                                </Col>
-                                <Col>
-                                    <Form.Control type='label' value={this.state.status.movie._id}/>
-                                </Col>
-                            </Row>
-                        </Form.Group>
-                        {this.state.itemName.map((item)=>{
-                            return(
-                                <Form.Group>
-                                    <Row>
-                                        <Col className='col-2'>
-                                            <Form.Label>{item[0].toUpperCase() + item.substr(1,)}</Form.Label>
-                                        </Col>
-                                        <Col>
-                                            <Form.Control type='text' value={this.state.status.movie[item]}/>
-                                        </Col>
-                                    </Row>
-                                </Form.Group>
-                            )
-                        })}
-                    </Form>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Row className="col-12">
-                        <Col>
-                            <Button block variant="danger" onClick={this.handleConfirm}>Confirm</Button>
-                        </Col>
-                        <Col>
-                            <Button block variant="primary" onClick={this.handleShow}>Cancel</Button>
-                        </Col>
-                    </Row>
-                </Modal.Footer>
-            </Modal>
-
-        const ActionConfirm = 
-            <Modal show={this.state.status.isShowConfirm} onHide={this.handleShowConfirm}>
-
-            </Modal>
-
-        const tableBody = this.state.movies.map((item, index)=>{
+        
+        const ActionModal = () => {
+            return(
+                <Modal show={this.state.isShow} onHide={this.handleShow}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>
+                            <b variant="danger">{this.state.isEdit ? 'Edit' : 'Delete'}</b> movie
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Form>
+                            <Form.Group>
+                                <Row>
+                                    <Col className='col-2'>
+                                        <Form.Label>Code</Form.Label>
+                                    </Col>
+                                    <Col>
+                                        <Form.Control type='text' readOnly value={this.state.selectedMovie._id}/>
+                                    </Col>
+                                </Row>
+                            </Form.Group>
+                            {this.state.movieItems.map((item)=>{
+                                return(
+                                    <Form.Group>
+                                        <Row>
+                                            <Col className='col-2'>
+                                                <Form.Label>{item[0].toUpperCase() + item.substr(1,)}</Form.Label>
+                                            </Col>
+                                            <Col>
+                                                <Form.Control 
+                                                    type='text' 
+                                                    value={this.state.selectedMovie[item]}
+                                                    readOnly={!this.state.isEdit}
+                                                    name={item}
+                                                    onChange={this.handleOnChange}
+                                                />
+                                                {this.state.errors[item] ?
+                                                    <Badge variant='danger'>{this.state.errors[item]}</Badge>
+                                                    : null
+                                                }
+                                            </Col>
+                                        </Row>
+                                    </Form.Group>
+                                )
+                            })}
+                        </Form>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Row className="col-12">
+                            <Col>
+                                <Button block variant="danger" onClick={this.handleConfirm}>
+                                    <b>{this.state.isEdit?'Update':'Delete'}</b>
+                                </Button>
+                            </Col>
+                            <Col>
+                                <Button block variant="primary" onClick={this.handleShow}>Cancel</Button>
+                            </Col>
+                        </Row>
+                    </Modal.Footer>
+                </Modal>
+            )
+        }
+        
+        const tableBody = this.state.movieList.map((item, index)=>{
             return(
                 <tr>
                     <td>{index+1}</td>
                     <td>{item.name}</td>
                     <td>{item.rating}</td>
                     <td>
-                        <Row>
-                            <Col>
-                                <Button block variant="primary" size='sm' onClick={()=>this.handleAction('edit', index)}>Edit</Button>
-                            </Col>
-                            <Col>
-                                <Button block variant="danger" size='sm' onClick={()=>this.handleAction('remove', index)}>Remove</Button>
-                            </Col>
-                        </Row>
+                        <OverlayTrigger
+                            key={`edit${item._id}`}
+                            placement='left'
+                            overlay={
+                                <Tooltip id={`tooltipEdit${item._id}`}>
+                                    Edit item <strong variant='primary'>{item._id.substr(1,12)}...</strong>
+                                </Tooltip>
+                            }>
+                            <Button variant="outline-primary" size='sm' onClick={()=>this.handleAction('edit', index)} hover={()=>{alert('Hover button')}}><FaEdit/></Button>
+                        </OverlayTrigger>
+                        {' '}
+                        <OverlayTrigger
+                            key={`remove${item._id}`}
+                            placement='top'
+                            overlay={
+                                <Tooltip id={`tooltipRemove${item._id}`}>
+                                    Remove item <strong>{item._id.substr(1,10)}...</strong>
+                                </Tooltip>
+                            }>
+                            <Button variant='outline-danger' size='sm' onClick={()=>this.handleAction('remove', index)}><FaTrash/></Button>
+                        </OverlayTrigger>
                     </td>
                 </tr>
             )
@@ -167,8 +325,7 @@ class ReadPage extends React.Component{
                 </thead>
                 <tbody>
                     {tableBody}
-                    {ActionModal}
-                    {ActionConfirm}
+                    {ActionModal()}
                 </tbody>
             </Table>
         )

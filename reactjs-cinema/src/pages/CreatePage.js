@@ -1,137 +1,264 @@
 import React from 'react';
-import {Form, Button, Alert, Modal} from 'react-bootstrap';
+import {Form, Row, Col, Button, Badge, Modal} from 'react-bootstrap';
 
-class CreatePage extends React.Component{
+class CreatePage extends React.Component {
     constructor(props){
         super(props);
-        this.state = {
-            name: '',
-            rating: 0,
-            movie: {
-                name: '',
-                rating: 0,
-                time: []
-            },
-            error : {
-                name: '',
-                rating: '',
-                time:''
-            },
-            time: [],
-            show: false,
-            data: {}
-        }
-        this.handleName = this.handleName.bind(this);
-        this.handleRating = this.handleRating.bind(this);
-        this.handleTime = this.handleTime.bind(this);
+        this.getInitialState();
         this.handleOnChange = this.handleOnChange.bind(this);
+        this.handleReset = this.handleReset.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleFormSubmit = this.handleFormSubmit.bind(this);
     }
 
-    handleOnChange = (event) => {
-        event.preventDefault();
-        const {name, value} = event.target;
-        let error = this.state.error;
+    getInitialState = (isInit=true) => {
+        let newState = {flags: {}};
+        ['movies', 'errors'].forEach((eachState)=>{
+            newState[eachState] = {};
+            this.props.items.map((item)=>{
+                newState[eachState][item] = ''
+            })
+        })
+        if (isInit){
+            this.state = newState;
+        } else {
+            this.setState(newState)
+        }
+    }
+
+    setKeyValue = (key, errorValue, movieValue) => {
+        let preErrors = {...this.state.errors};
+        let preMovies = {...this.state.movies};
+        preErrors[key] = errorValue;
+        preMovies[key] = movieValue;
+        let isShowSubmitButton = false;
+        if ((key ==='name' && movieValue.length !== 0) || this.state.movies['name'].length !== 0) {
+            isShowSubmitButton = true
+        }
+        this.setState({
+            ...this.state,
+            movies: preMovies,
+            errors: preErrors,
+            flags: {
+                ...this.state.flags,
+                isShowSubmitButton: isShowSubmitButton
+            }
+        })
+    }
+
+    movieNameValidation = (movieName) => {
+        let errorStr = 'Movie name must NOT be empty';
+        let name = movieName.trim();
+        if (name.length) {
+            errorStr = '';
+        } else {
+            name = '';
+        }
+        return [errorStr, name]
+    }
+
+    movieRatingValidation = (movieRating) => {
+        let errorStr = 'Movie rating must be a NUMBER';
+        let ratingNumber = parseFloat(movieRating);
+        if (!ratingNumber){
+            ratingNumber = 0.0;
+        } else {
+            errorStr = ''
+        }
+        return [errorStr, ratingNumber]
+    }
+
+    movieTimeValidation = (movieTime) => {
+        const timePattern = /^\d{1,2}:\d{2}[,\d{1,2}:\d{2}]*?$/;
+        let errorStr = 'Movie time must be a string PATTERN hh:mm or hh:mm,hh:mm'
+        let timeArray = movieTime.trim()
+        if (timePattern.test(timeArray)){
+            errorStr = '';
+            timeArray = timeArray.split(',');
+        } else {
+            timeArray = [];
+        }
+        return [errorStr, timeArray]
+    }
+
+    movieValidation = (name, value) => {
+        let [errorStr, returnValue] = '';
         switch (name) {
             case 'name':
-                error.name = value.trim().length === 0 ? 'Movie name must NOT be empty' : '';
+                [errorStr, returnValue] = this.movieNameValidation(value);
                 break;
             case 'rating':
-                error.rating = parseFloat(value.trim()) ? '': 'Rating must be a number';
+                [errorStr, returnValue] = this.movieRatingValidation(value);
                 break;
             case 'time':
-                error.time = value.split(',') ? '' : 'Movie time must a time like hh:mm';
-                console.log(value.split(','));
+                [errorStr, returnValue] = this.movieTimeValidation(value);
                 break;
             default:
                 break;
         }
-        this.setState({error, [name]: value}, ()=>{console.log(name, value, error)});
+        return [name, errorStr, returnValue]
     }
 
-    handleShow = () => this.setState({show: !this.state.show});
-
-    handleName(event){
-        this.setState({name: event.target.value});
+    handleOnChange = (event) => {
+        let name = event.target.name;
+        let value = event.target.value;
+        let [keyName, errorStr, keyValue] = this.movieValidation(name, value);
+        this.setKeyValue(keyName, errorStr, keyValue);
     }
 
-    handleRating(event){
-        this.setState({rating: event.target.value});
+    handleReset = () => {
+        this.getInitialState(false);
+        document.getElementById('movieCreateForm').reset();
     }
 
-    handleTime(event){
-        alert(event.target.value);
-        let timeArray = event.target.value;
-        this.setState({time: timeArray.split(',')});
-        console.log(timeArray);
+    isFormValid = () => {
+        this.props.items.forEach(item => {
+            if (this.state.errors[item].length !== 0){
+                return false;
+            }
+        });
+        return true;
     }
 
-    handleSubmit(event){
-        event.preventDefault();
-
-        let data = {
-            name: this.state.name,
-            rating: this.state.rating,
-            time: this.state.time
-        }
-        //console.log(this.state);
-        console.log(data);
-
-        fetch('http://localhost:5000/movie/create', {
-            headers: {'Content-Type':'application/json'},
-            method: 'POST',
-            body: JSON.stringify(data)
+    handleShowConfirmation = () => {
+        this.setState({
+            ...this.state,
+            flags:{
+                ...this.state.flags,
+                isShowConfirmation: !this.state.flags.isShowConfirmation
+            }
         })
-            .then(async res => await res.json())
-            .then(res => this.setState({data: res.data, show: !this.state.show}));
+        if (this.state.flags.isCreated){
+            this.handleReset();
+        }
+    }
 
+    handleSubmit = () => {
+        if (this.isFormValid){
+            this.handleShowConfirmation();
+        } else {
+            alert('Form is not valid')
+        }
+    } 
+
+    handleFormSubmit = () => {
+        let urlHeroku = 'https://nodejs-cinema.herokuapp.com/api';
+        //const urlLocalHost = 'http://localhost:5000/movie/create';
+        fetch(urlHeroku,{
+            headers: {'Content-Type':'application/json'},
+            method: 'PUT',
+            body: JSON.stringify(this.state.movies)
+        }).then(res => res.json()).then(res => this.setState({
+                ...this.state,
+                movies: res.data,
+                flags : {
+                    ...this.state.flags,
+                    isCreated: true
+                }
+            })
+        )
     }
 
     render(){
-        return(
-            <Form onSubmit={this.handleSubmit.bind(this)} ref='create-movie-form'>
-                <Alert variant="primary">
-                    <h2><Alert.Link>Create</Alert.Link> movie page</h2>
-                </Alert>
+
+        const MovieItems = this.props.items.map((item)=>{
+            return(
                 <Form.Group>
-                    <Form.Label>Name</Form.Label>
-                    <Form.Control type='text' placeholder='Enter the movie name' name='name' onChange={this.handleOnChange} required/>
-                    <Form.Text ><span variant='danger'>{this.state.error.name}</span></Form.Text>
+                    <Form.Label>
+                        {item[0].toUpperCase() + item.substr(1,)}{' '}
+                    </Form.Label>
+                    <Form.Control
+                        type='text'
+                        size='lg'
+                        placeholder={`Enter the movie ${item}`}
+                        name={item}
+                        onChange={this.handleOnChange}
+                    />
+                    {this.state.errors[item] === '' ? null : 
+                        <Badge variant='danger'>{this.state.errors[item]}</Badge>
+                    }
                 </Form.Group>
-                <Form.Group>
-                    <Form.Label>Rating</Form.Label>
-                    <Form.Control type='text' placeholder='Enter the movie rating' name='rating' onChange={this.handleOnChange} required/>
-                </Form.Group>
-                <Form.Group>
-                    <Form.Label>Time</Form.Label>
-                    <Form.Label>Rating</Form.Label>
-                    <Form.Control type='text' placeholder='Enter the movie timing' name='time' onChange={this.handleOnChange} required/>
-                </Form.Group>
-                <Button variant='primary' type='submit' onClick={this.createMovie}>Submit</Button>{' '}
-                <Button variant='danger' >Clear form</Button>
-                <Modal show={this.state.show} onHide={this.handleShow}>
+            )
+        })
+
+        let MovieCreateConfirmation = (movie) => {
+            let modalTitle = 'Movie create confirmation !';
+            let movieCode = null;
+            let buttonList =
+                    <Row>
+                        <Col>
+                            <Button block variant="secondary" onClick={this.handleShowConfirmation}>Cancel</Button>{' '}
+                        </Col>  
+                        <Col>
+                            <Button block variant='primary' onClick={this.handleFormSubmit}>Confirm</Button>{' '}
+                        </Col>    
+                    </Row>
+            if (this.state.flags.isCreated){
+                modalTitle = 'Movie is creadted sucessfully !!!'
+                movieCode = 
+                    <Form.Group>
+                        <Row>
+                            <Col className='col-2'>
+                                <Form.Label>Code</Form.Label>
+                            </Col>
+                            <Col>
+                                <Form.Control value={this.state.movies._id}/>
+                            </Col>
+                        </Row>
+                    </Form.Group>
+                buttonList = 
+                    <Row>
+                        <Col>
+                            <Button block variant="success" onClick={this.handleShowConfirmation}>Close</Button>{' '}
+                        </Col>  
+                    </Row> 
+            }
+            return(
+                <Modal show={this.state.flags.isShowConfirmation} onHide={this.handleShowConfirmation}>
                     <Modal.Header closeButton>
-                        <Modal.Title>Movie created successfully</Modal.Title>
+                        <Modal.Title> {modalTitle} </Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <Form>
-                            <Form.Group>
-                                <Form.Label>Code</Form.Label>
-                                <Form.Control type='label' value={this.state.data._id}/>
-                            </Form.Group>
-                            <Form.Group>
-                                <Form.Label>Name</Form.Label>
-                                <Form.Control type='label' value={this.state.data.name}/>
-                            </Form.Group>
-                            <Form.Group>
-                                <Form.Label>Rating</Form.Label>
-                                <Form.Control type='label' value={this.state.data.rating} onChange={()=>{alert()}}/>
-                            </Form.Group>
-                        </Form>
+                        {movieCode}
+                        {this.props.items.map(item=>{
+                            return(
+                                <Form.Group>
+                                    <Row>
+                                        <Col className='col-2'>
+                                            <Form.Label>{item[0].toUpperCase() + item.substr(1,)}</Form.Label>
+                                        </Col>
+                                        <Col>
+                                            <Form.Control value={this.state.movies[item]}/>
+                                        </Col>
+                                    </Row>
+                                </Form.Group>   
+                            )
+                        })}
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="secondary" onClick={this.handleShow}>Close</Button>
+                        <Col className='col-2'/>
+                        <Col> {buttonList} </Col>
                     </Modal.Footer>
                 </Modal>
+            )}
+
+        return(
+            <Form id='movieCreateForm'>
+                {MovieItems}
+                <Row>
+                    <Col>
+                        <Button block size='lg' 
+                                variant='primary' 
+                                onClick={this.handleSubmit} 
+                                disabled={!this.state.flags.isShowSubmitButton}>
+                            Submit
+                        </Button>
+                    </Col>
+                    <Col>
+                        <Button block size='lg' variant='danger' onClick={this.handleReset}>Reset</Button>
+                    </Col>
+                </Row>
+                {MovieCreateConfirmation(this.state.movies)}
             </Form>
         )
     }

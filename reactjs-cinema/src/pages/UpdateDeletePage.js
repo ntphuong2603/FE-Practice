@@ -1,19 +1,17 @@
 import React from 'react';
 import {Form, Button, Alert, Col, Row} from 'react-bootstrap';
 
-class CreatePage extends React.Component{
+class UpdateDeletePage extends React.Component{
     constructor(props){
         super(props);
         this.state = {
-            movies: [],
-            movie:{
-                code: '',
-                name: '',
-                rating: '',
-                time: ''
-            },
+            movies: [{'name':'Select movie title ...'}],
+            movie: {},
             method: '',
-            urlString : ''
+            url: {
+                Heroku: 'https://nodejs-cinema.herokuapp.com/api/movies',
+                LocalHost: 'http://localhost:8080/api/movies'
+            }
         }
         this.handleSelect = this.handleSelect.bind(this);
         this.handleChange = this.handleChange.bind(this);
@@ -29,7 +27,9 @@ class CreatePage extends React.Component{
             rating: movie.rating,
             time: movie.time
         })
-        //console.log(this.state)
+        if (movie.name === 'Select movie title ...') {
+           document.getElementById('update_delete_form').reset();
+        }
     }
 
     handleChange(event){
@@ -42,7 +42,6 @@ class CreatePage extends React.Component{
         } else if (name === 'time') {
             this.setState({time: value});
         }         
-        //console.log(this.state)
     }
 
     handleMethod(event){
@@ -53,9 +52,15 @@ class CreatePage extends React.Component{
     }
     
     componentDidMount(){
-        fetch('http://localhost:5000/movie/all')
-            .then(async res => await res.json())
-            .then(res => this.setState({movies: res.data}));
+        const urlString = this.state.url.Heroku;
+        fetch(urlString)
+            .then(res => res.json())
+            .then(res => {
+                let movieList = this.state.movies;
+                console.log(movieList);
+                movieList.push(...res.data);
+                this.setState({movies: movieList})
+            });
     }
 
     handleSubmit(event){
@@ -91,20 +96,11 @@ class CreatePage extends React.Component{
             }
         })
         console.log('After:' ,this.state.movies)
-        /*
-        fetch(`http://localhost:5000/movie/update/${this.state.code}`, {
-            headers: {'Content-Type':'application/json'},
-            method: 'POST',
-            body: JSON.stringify(data)
-        })
-            .then(async res => await res.json())
-            .then(res => this.setState({data: res.data, show: !this.state.show}));
-        */
     }
 
     render(){
         return(
-            <Form onSubmit={this.handleSubmit.bind(this)}>
+            <Form id='update_delete_form' onSubmit={this.handleSubmit.bind(this)}>
                 <Alert variant='warning'>
                     <h2><Alert.Link>Update</Alert.Link> or <Alert.Link variant="danger">Delete</Alert.Link></h2>
                 </Alert>
@@ -160,10 +156,10 @@ class CreatePage extends React.Component{
                         <Col>
                             <Row>
                                 <Col>
-                                    <Button block variant='primary' type='submit' name='update' onClick={this.handleMethod}>Update</Button>
+                                    <Button block variant='primary' type='submit' name='update' size='lg' onClick={this.handleMethod}>Update</Button>
                                 </Col>
                                 <Col>
-                                    <Button block variant='danger' type='submit' name='delete' onClick={this.handleMethod}>Delete</Button>
+                                    <Button block variant='danger' type='submit' name='delete' size='lg' onClick={this.handleMethod}>Delete</Button>
                                 </Col>
                             </Row>
                         </Col>
@@ -174,4 +170,4 @@ class CreatePage extends React.Component{
     }
 }
 
-export default CreatePage;
+export default UpdateDeletePage;

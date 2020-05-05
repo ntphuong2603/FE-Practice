@@ -3,10 +3,16 @@ import {Nav} from 'react-bootstrap';
 
 class MenuBar extends React.Component{
     render(){
-        const menu = ['Create', 'Read', 'Update', 'Delete'].map((item, index)=>{
+        const menu = ['Create', 'Read', 'Update - Delete'].map((item, index)=>{
             return(
                 <Nav.Item>
-                    <Nav.Link eventKey={index} href={`/#${item.toLowerCase()}`}>{item}</Nav.Link>
+                    <Nav.Link 
+                        eventKey={index} 
+                        href={`/#${item.toLowerCase()}`}
+                        disabled = {item==='Update - Delete'}
+                    >
+                            {item}
+                    </Nav.Link>
                 </Nav.Item>
             )
         });

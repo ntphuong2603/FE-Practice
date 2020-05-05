@@ -3,7 +3,7 @@ import {HashRouter, Route} from 'react-router-dom';
 import {Container, Row, Col} from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import MenuBar from './components/MenuBar';
-import {CreatePageV3, ReadPageV3, UpdatePage, DeletePage} from './pages/index';
+import {CreatePage, ReadPage, UpdateDeletePage} from './pages/IndexPages';
 
 function App() {
   return (
@@ -14,10 +14,11 @@ function App() {
             <MenuBar/>
           </Col>
           <Col className="col-9">
-            <Route exact path='/read' component={()=><ReadPageV3 headers={['No.', 'Movie', 'Rating', 'Select']} />}/>
-            <Route path='/create' component={()=> <CreatePageV3 items={['name', 'rating', 'time']}/>}/>
-            <Route path='/update' component={UpdatePage}/>
-            <Route path='/delete' component={DeletePage}/>
+            <Route exact path='/read' component={()=><ReadPage headers={['No.', 'Movie', 'Rating', 'Select']} />}/>
+            <Route path='/create' component={()=> <CreatePage items={['name', 'rating', 'time']}/>}/>
+            {/*
+            <Route path='/update - delete' component={UpdateDeletePage}/>
+            */}
           </Col>
         </Row>
       </HashRouter>
